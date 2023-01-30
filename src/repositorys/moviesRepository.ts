@@ -1,49 +1,104 @@
-import connection from "../database.js";
-import  { MovieEntity, Movie } from "../Protocols/MovieProtocol.js";
+import prisma from "../database.js";
+import  { MovieEntity, Movie, NewMovie } from "../Protocols/MovieProtocol.js";
 import { QueryResult } from "pg";
+import { Genres, ArrayGenres } from "../Protocols/GenreProtocol.js";
 
-export async function Movies(): Promise<QueryResult<MovieEntity>>{
+async function Movies(){
 
-    return await connection.query
-    (
-        `SELECT * FROM movies`
+    return (
+        await prisma.movie.findMany({
+            include: {
+                genres: {
+                    select: {
+                        name: true
+                    }
+                },
+                platforms: {
+                    select: {
+                        name: true
+                    }
+                }
+        }})
     )
+    
 }
 
-export async function MoviesbyGrade(grade: string): Promise<QueryResult<MovieEntity>>{
+async function MoviesbyGrade(grade: string){
     console.log(grade);
 
     const num = Number(grade);
-        return await connection.query
-        (
-            `SELECT * FROM movies WHERE imdbgrade > $1`,
-            [num]
-        )
+        return await prisma.movie.findMany({
+            where: {
+                imdbgrade: {
+                    gte: num
+                }
+            },
+                include: {
+                genres: {
+                    select: {
+                        name: true
+                    }
+                },
+                platforms: {
+                    select: {
+                        name: true
+                    }
+                }
+        }
+        })
    
+}
+async function MoviebyName(name: string){
+    return await prisma.movie.findFirst({
+        where: {
+            name
+        }
+    })
+}
+
+async function Create(name: string, synopsis: string, imdbgrade: number, coments: string, length: number, genres: string[]){
+    console.log(genres[0])
     
+    return await prisma.movie.create({
+        data: {
+            name: name,
+            synopsis: synopsis,
+            imdbgrade: imdbgrade,
+            coments: coments,
+            length: length,
+            genres: {
+                create: [
+                    { name: genres[0]},
+                    genres[1]?{name: genres[1]}:null,
+                    genres[2]?{name: genres[2]}:null,
+                    genres[3]?{name: genres[3]}:null,
+                    genres[4]?{name: genres[4]}:null,
 
-}
-export async function insertMovie(body: MovieEntity): Promise<QueryResult<Movie>>{
-    const{ name, img, synopsis, imdbgrade, releaseyear, platform, coments, imdburl, length } = body;
-    return await connection.query (
-        `INSERT INTO movies ("name", "img", "synopsis", "imdbgrade", "releaseyear", "platform", "coments", "imdburl", "length")
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-        [name, img, synopsis, imdbgrade, releaseyear, platform, coments, imdburl, length]
+                ]
+            }
+  
+            
+                
+            
+
+        }
+    }
     )
 }
 
-export async function removeMovie(id: string): Promise<QueryResult<Movie>>{
-    const num = Number(id)
-    return await connection.query (
-        `DELETE FROM movies
-        WHERE id = $1`,
-        [num]
-    )
+async function Update(id: number, movie: Movie){
+    return await prisma.movie.update({
+        where: {id},
+        data: movie
+    })
 }
 
-export async function addComment (coment : string, id : number):Promise<QueryResult>{
-    return await connection.query (
-        `UPDATE movies SET coments = $1 WHERE id = $2 `,
-        [coment, id]
-    )
+
+export const moviesRepository = {
+    Movies,
+    MoviesbyGrade,
+    MoviebyName,
+    Create,
+    Update
+
 }

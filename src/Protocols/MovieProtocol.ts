@@ -1,16 +1,7 @@
-export type MovieEntity = {
-    id: number,
-    name: string,
-    img: string,
-    synopsis: string,
-    imdbgrade: number,
-    releaseyear: number,
-    platform: string,
-    coments: string,
-    imdburl: string,
-    length: number,
-    createdAt: Date
-}
+import { movie, genre, platform } from "@prisma/client"
 
-export type Movie = Omit<MovieEntity, "id" | "createdAt">
+export type MovieEntity = movie
 
+export type NewMovie = Omit<movie, "id" | "createdAt">
+
+export type Movie = Partial<movie>

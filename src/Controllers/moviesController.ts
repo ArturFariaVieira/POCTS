@@ -1,10 +1,11 @@
-import { Movies, MoviesbyGrade, insertMovie, removeMovie, addComment } from "../repositorys/moviesRepository.js";
+import {MoviesServices} from "../Services/movieServices.js"
 import express, {Request, Response} from "express";
+import { MovieEntity, NewMovie, Movie } from "../Protocols/MovieProtocol.js";
 
 export async function getMovies(req: Request, res: Response) {
     try{
-        const movies = await Movies();
-        return res.send(movies.rows);
+        const movies = await MoviesServices.FindMovies();
+        return res.send(movies);
     }catch(err){
         console.log(err);
         res.sendStatus(500);
@@ -12,44 +13,37 @@ export async function getMovies(req: Request, res: Response) {
 }
 
 export async function getMoviesbyGrade(req: Request, res: Response){
-    const {grade} = req.query as Record<string, string>;
+    const {grade} = req.params
     try{
-        const movies = await MoviesbyGrade(grade);
-        return res.send(movies.rows);
+        const movies = await MoviesServices.FindbyGrade(grade);
+        return res.send(movies);
     }catch(err){
         console.log(err);
         res.sendStatus(500);
     }
 }
 
-export async function addMovie(req: Request, res: Response){
+export async function CreateMovie(req: Request, res: Response){
+    const {name, synopsis, imdbgrade, coments, length, genres} = req.body
     try{
-        const movies = await insertMovie(req.body);
-        return res.sendStatus(201);
-    }catch(err){
-        console.log(err);
-        res.sendStatus(500);
-    }
-}
-
-export async function deleteMovie(req: Request, res: Response){
-    const {id} = req.query as Record<string, string>;
-    try{
-        await removeMovie(id);
+        await MoviesServices.CreateMovie(name, synopsis, imdbgrade, coments, length, genres);
         return res.sendStatus(200)
     }catch(err){
         console.log(err);
         res.sendStatus(500);
     }
+
+
 }
 
-export async function updateMovie(req: Request, res: Response){
-    const {coment, id} = req.body;
+export async function UpdateMovie(req: Request, res: Response){
+    const {id} = req.params;
+    const movie = req.body as Movie
     try{
-        await addComment(coment, id);
-        return res.sendStatus(200);
+        await MoviesServices.UpdatebyId(id, movie)
+        return res.sendStatus(200)
     }catch(err){
         console.log(err);
-        res.sendStatus(500);
+        res.sendStatus(500)
     }
 }
